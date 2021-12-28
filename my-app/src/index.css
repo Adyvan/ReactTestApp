@@ -7,6 +7,12 @@ body {
     padding-left: 30px;
   }
   
+  .btn-select {
+    background-color: burlywood;
+    color: rgb(46, 66, 20);
+    font-weight: bold;
+  }
+
   .board-row:after {
     clear: both;
     content: "";
