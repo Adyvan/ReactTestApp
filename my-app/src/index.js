@@ -6,12 +6,13 @@ const XValue = 1;
 const OValue = 4;
 
 function Square(props) {
-return (
-  <button className="square" onClick={props.onClick}>
-    {props.value === XValue ? "X" : props.value === OValue ? "0" : '' }
-  </button>
-);
-}
+  const className = ((props.value && props.value.isWin) ? "square-win" : "square");
+  return (
+    <button className={className} onClick={props.onClick}>
+      {props.value && (props.value.value === XValue) ? "X" : props.value && (props.value.value === OValue) ? "0" : '' }
+    </button>
+  );
+  }
 
 class Board extends React.Component {
   renderSquare(i) {
@@ -75,7 +76,13 @@ class Game extends React.Component {
     const squares = current.squares.slice();
     
     if (!calculateFinishGame(squares, history.length) && !squares[i]) {
-      squares[i] = this.state.xIsNext ? XValue : OValue;
+      if(!squares[i]){
+        squares[i] = {
+           value: null,
+           isWin: false,
+          };
+       }
+      squares[i].value = this.state.xIsNext ? XValue : OValue;
       this.setState({
         history: history.concat([{
           squares: squares,
@@ -102,7 +109,7 @@ class Game extends React.Component {
       : 'К началу игры';
       const className = (move === this.state.stepNumber ? "btn-select" : "none");
         return (
-        <li key={move}>
+        <li key={move} >
           <button className={className} onClick={() => this.jumpTo(move)}>{desc}</button>
         </li>  
         )
@@ -145,8 +152,18 @@ function calculateFinishGame(squares) {
   ];
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
-    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return { won: squares[a] };
+    if (squares[a] && squares[a].value 
+      && squares[b] && squares[b].value
+      && squares[c] && squares[c].value
+      && squares[a].value === squares[b].value && squares[a].value === squares[c].value) {
+        squares[a] = Object.create(squares[a]);
+        squares[b] = Object.create(squares[b]);
+        squares[c] = Object.create(squares[c]);
+      squares[a].isWin = true;
+      squares[b].isWin = true;
+      squares[c].isWin = true;
+
+      return { won: squares[a].value };
     }
   }
   return null;

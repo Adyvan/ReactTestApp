@@ -37,7 +37,22 @@ body {
     text-align: center;
     width: 44px;
   }
-  
+
+  .square-win {
+    background-color: rgb(96, 187, 74);
+    border: 1px solid #999;
+    float: left;
+    font-size: 34px;
+    font-weight: bold;
+    line-height: 44px;
+    height: 44px;
+    margin-right: -1px;
+    margin-top: -1px;
+    padding: 0;
+    text-align: center;
+    width: 44px;
+  }
+
   .square:focus {
     outline: none;
   }
