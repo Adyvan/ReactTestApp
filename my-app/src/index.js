@@ -105,11 +105,14 @@ class Game extends React.Component {
     const current = history[this.state.stepNumber];
     const winner = calculateFinishGame(current.squares, history.length);
     
-    let status = 'Следующий ход: ' + (this.props.xIsNext ? 'X' : '0');
+    let status = 'Следующий ход: ' + (this.state.xIsNext ? 'X' : '0');
     if (winner) {
       status = 'Выиграл ' + (winner === XValue ? 'X' : '0');
+    } else if(this.state.stepNumber === 9) {
+      status = 'Ничья'
     }
 
+    
     let moves = history.map((step, move) => {
       const desc = move 
       ? 'Перейти к ходу #' + move + ' ' + getLastPosition(history, move)
