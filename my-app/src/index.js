@@ -60,6 +60,7 @@ class Game extends React.Component {
       }],
       stepNumber:0,
       xIsNext: true,
+      orderInverse: false,
     };
   }
 
@@ -93,6 +94,12 @@ class Game extends React.Component {
     }
   }
 
+  onValueChange = (event) => {
+    this.setState({
+      orderInverse: !this.state.orderInverse,
+    });
+  }
+
   render() {
     const history = this.state.history;
     const current = history[this.state.stepNumber];
@@ -103,7 +110,7 @@ class Game extends React.Component {
       status = 'Выиграл ' + (winner === XValue ? 'X' : '0');
     }
 
-    const moves = history.map((step, move) => {
+    let moves = history.map((step, move) => {
       const desc = move 
       ? 'Перейти к ходу #' + move + ' ' + getLastPosition(history, move)
       : 'К началу игры';
@@ -115,6 +122,10 @@ class Game extends React.Component {
         )
     });
 
+    if(this.state.orderInverse) {
+      moves = moves.reverse(); 
+    }
+
     return (
       <div className="game">
         <div className="game-board">
@@ -125,6 +136,15 @@ class Game extends React.Component {
         </div>
         <div className="game-info">
           <div>{status}</div>
+            <div>
+              <input
+                type="checkbox"
+                value="inverse"
+                checked={this.state.orderInverse}
+                onChange={this.onValueChange}
+              />
+            Inverse Order
+            </div>
           <ol>{moves}</ol>
         </div>
       </div>
