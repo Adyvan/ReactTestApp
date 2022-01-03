@@ -14,9 +14,8 @@ const Lines = [
   [1, 4, 7], // 6
   [2, 5, 8], // 7
 ];
-const LoseCase12TargetLines = [3,6];
-const LoseCase1 = {x : 4901796, o: 1024};
-const LoseCase2 = {x : 387538596, o: 1024};
+const LoseCase1TargetLines = [3,6];
+const LoseCase1 = {x : 90000, o: 200};
 
 function Square(props) {
   const className = ((props.value && props.value.isWin) ? "square-win" : "square");
@@ -67,7 +66,7 @@ class Board extends React.Component {
 class Game extends React.Component {
   constructor(props) {
     super(props);
-    const firstStep = getRandomBool();
+    const firstStep = true;// getRandomBool();
     this.state = {
       history: [{
         squares: Array(9).fill(null),
@@ -215,11 +214,9 @@ function gradeLine(squares, lines)
   let gameState = calculateStatePlayerS(squares);
   console.log(gameState);
 
-  //f(gameState.x === 36 && gameState.o === 4)
-  let state = JSON.stringify(gameState);
-  if(state === JSON.stringify(LoseCase1) || state === JSON.stringify(LoseCase2))
+  if(JSON.stringify(gameState) === JSON.stringify(LoseCase1))
   {
-    return LoseCase12TargetLines[getRandomInt(0,LoseCase12TargetLines.length)];
+    return LoseCase1TargetLines[getRandomInt(0,LoseCase1TargetLines.length)];
   }
 
   let linesValue = lines.map((x, i) => {
@@ -283,11 +280,11 @@ function calculateStatePlayerS(squares)
       if(squares[i]?.value=== XValue)
       {
         countX++;
-        valueX += Math.pow(gratePosition(i), i + 1);
+        valueX += gratePosition(i) * (i + 1) * 10;
       } else if(squares[i]?.value=== OValue)
       {
         count0++;
-        value0 += Math.pow(gratePosition(i), i + 1);
+        value0 += gratePosition(i) * (i + 1) * 10;
       }
     }
   }
