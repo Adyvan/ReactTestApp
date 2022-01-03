@@ -4,6 +4,16 @@ import './index.css';
 
 const XValue = 1;
 const OValue = 4;
+const Lines = [
+  [0, 4, 8],
+  [2, 4, 6],
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8],
+];
 
 function Square(props) {
   const className = ((props.value && props.value.isWin) ? "square-win" : "square");
@@ -71,7 +81,33 @@ class Game extends React.Component {
     });
   }
 
-  handleClick(i){
+  botStep(squares) {
+    let index = calculateNextStep(squares);
+    if(index) {
+      const history = this.state.history.slice(0, this.state.stepNumber + 1);
+      const current = history[history.length - 1];
+      const squares = current.squares.slice();
+      
+      if (!calculateFinishGame(squares, history.length) && !squares[index]) {
+        if(!squares[index]) {
+          squares[index] = {
+            value: null,
+            isWin: false,
+            };
+        }
+        squares[index].value = this.state.xIsNext ? XValue : OValue;
+        this.setState({
+          history: history.concat([{
+            squares: squares,
+          }]),
+          stepNumber: history.length,
+          xIsNext: !this.state.xIsNext,
+        });
+      }
+    }
+  }
+
+  handleClick(i) {
     const history = this.state.history.slice(0, this.state.stepNumber + 1);
     const current = history[history.length - 1];
     const squares = current.squares.slice();
@@ -91,9 +127,13 @@ class Game extends React.Component {
         stepNumber: history.length,
         xIsNext: !this.state.xIsNext,
       });
+      if(!this.state.xIsNext)
+      {
+        this.botStep(squares);
+      }
     }
   }
-
+  
   onValueChange = (event) => {
     this.setState({
       orderInverse: !this.state.orderInverse,
@@ -162,19 +202,81 @@ ReactDOM.render(
   document.getElementById('root')
 );
 
+function gradeIndex(line)
+{
+  let index = line.map((x, i) => { return {
+    index: x,
+    grade: x % 2 === 0 ? (x === 4 ? 4 : 3) : 2,
+  }}).sort((a,b) => {
+    if (a.grade > b.grade) return -1;
+    if (a.grade < b.grade) return 1;
+    return 0;
+  }).shift();
+  return index?.index;
+}
+
+function gradeLine(squares, lines)
+{
+  let linesValue = lines.map((x, i) => {
+    const [a, b, c]  = lines[i];
+    let aV = squares[a]?.value ?? 0;
+    let bV = squares[b]?.value ?? 0;
+    let cV = squares[c]?.value ?? 0;
+    return { 
+      value: aV + bV + cV,
+      index: i
+    };
+  });
+
+  // 0 0 []
+  let priorityLine = linesValue.slice().filter((x) => x.value === 8).shift();
+
+  if(!priorityLine)
+  {
+    // X X []
+    priorityLine = linesValue.slice().filter((x) => x.value === 2).shift();
+  }
+
+  if(!priorityLine)
+  {
+    // 0 [] []
+    priorityLine = linesValue.slice().filter((x) => x.value === 4).shift();
+  }
+
+  if(!priorityLine)
+  {
+    // [] [] []
+    priorityLine = linesValue.slice().filter((x) => x.value === 0).shift();
+  }
+
+  if(!priorityLine)
+  {
+    // X [] []
+    priorityLine = linesValue.slice().filter((x) => x.value === 1).shift();
+  }
+
+  if(!priorityLine)
+  {
+    // X 0 []
+    priorityLine = linesValue.slice().filter((x) => x.value === 5).shift();
+  }
+
+  return  priorityLine?.index;
+}
+
+function calculateNextStep(squares) {
+  let priorityLine = gradeLine(squares, Lines);
+
+  let line = Lines[priorityLine];
+  if(line) {
+    return gradeIndex(line);
+  }
+  return null;
+}
+
 function calculateFinishGame(squares) {
-  const lines = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6],
-  ];
-  for (let i = 0; i < lines.length; i++) {
-    const [a, b, c] = lines[i];
+  for (let i = 0; i < Lines.length; i++) {
+    const [a, b, c] = Lines[i];
     if (squares[a] && squares[a].value 
       && squares[b] && squares[b].value
       && squares[c] && squares[c].value
