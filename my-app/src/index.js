@@ -83,27 +83,8 @@ class Game extends React.Component {
 
   botStep(squares) {
     let index = calculateNextStep(squares);
-    if(index) {
-      const history = this.state.history.slice(0, this.state.stepNumber + 1);
-      const current = history[history.length - 1];
-      const squares = current.squares.slice();
-      
-      if (!calculateFinishGame(squares, history.length) && !squares[index]) {
-        if(!squares[index]) {
-          squares[index] = {
-            value: null,
-            isWin: false,
-            };
-        }
-        squares[index].value = this.state.xIsNext ? XValue : OValue;
-        this.setState({
-          history: history.concat([{
-            squares: squares,
-          }]),
-          stepNumber: history.length,
-          xIsNext: !this.state.xIsNext,
-        });
-      }
+    if(index !== null) {
+      this.handleClick(index);
     }
   }
 
@@ -127,10 +108,6 @@ class Game extends React.Component {
         stepNumber: history.length,
         xIsNext: !this.state.xIsNext,
       });
-      if(!this.state.xIsNext)
-      {
-        this.botStep(squares);
-      }
     }
   }
   
@@ -144,12 +121,15 @@ class Game extends React.Component {
     const history = this.state.history;
     const current = history[this.state.stepNumber];
     const winner = calculateFinishGame(current.squares, history.length);
-    
+    let canGoBot = true;
+
     let status = 'Следующий ход: ' + (this.state.xIsNext ? 'X' : '0');
     if (winner) {
       status = 'Выиграл ' + (winner === XValue ? 'X' : '0');
+      canGoBot = false;
     } else if(this.state.stepNumber === 9) {
       status = 'Ничья'
+      canGoBot =false;
     }
 
     
@@ -167,6 +147,11 @@ class Game extends React.Component {
 
     if(this.state.orderInverse) {
       moves = moves.reverse(); 
+    }
+
+    if(!this.state.xIsNext && canGoBot)
+    {
+      setTimeout(() => {this.botStep(current.squares)},200);
     }
 
     return (
@@ -202,11 +187,11 @@ ReactDOM.render(
   document.getElementById('root')
 );
 
-function gradeIndex(line)
+function gradeIndex(line, squares)
 {
   let index = line.map((x, i) => { return {
     index: x,
-    grade: x % 2 === 0 ? (x === 4 ? 4 : 3) : 2,
+    grade: (!(squares[x]?.value) ? (x % 2 === 0 ? (x === 4 ? 4 : 3) : 2) : -1),
   }}).sort((a,b) => {
     if (a.grade > b.grade) return -1;
     if (a.grade < b.grade) return 1;
@@ -268,10 +253,11 @@ function calculateNextStep(squares) {
   let priorityLine = gradeLine(squares, Lines);
 
   let line = Lines[priorityLine];
+  let index = null;
   if(line) {
-    return gradeIndex(line);
+    index =  gradeIndex(line, squares);
   }
-  return null;
+  return index === -1 ? null : index;
 }
 
 function calculateFinishGame(squares) {
