@@ -5,15 +5,18 @@ import './index.css';
 const XValue = 1;
 const OValue = 4;
 const Lines = [
-  [0, 4, 8],
-  [2, 4, 6],
-  [0, 1, 2],
-  [3, 4, 5],
-  [6, 7, 8],
-  [0, 3, 6],
-  [1, 4, 7],
-  [2, 5, 8],
+  [0, 4, 8], // 0
+  [2, 4, 6], // 1
+  [0, 1, 2], // 2
+  [3, 4, 5], // 3
+  [6, 7, 8], // 4
+  [0, 3, 6], // 5
+  [1, 4, 7], // 6
+  [2, 5, 8], // 7
 ];
+const LoseCase12TargetLines = [3,6];
+const LoseCase1 = {x : 4901796, o: 1024};
+const LoseCase2 = {x : 387538596, o: 1024};
 
 function Square(props) {
   const className = ((props.value && props.value.isWin) ? "square-win" : "square");
@@ -64,20 +67,22 @@ class Board extends React.Component {
 class Game extends React.Component {
   constructor(props) {
     super(props);
+    const firstStep = getRandomBool();
     this.state = {
       history: [{
         squares: Array(9).fill(null),
       }],
       stepNumber:0,
-      xIsNext: true,
+      xIsNext: firstStep,
       orderInverse: false,
+      firstStep: firstStep,
     };
   }
 
   jumpTo(step) {
     this.setState({
       stepNumber: step,
-      xIsNext: (step % 2) === 0,
+      xIsNext: ((step % 2) === 0) ?  this.state.firstStep : !this.state.firstStep,
     });
   }
 
@@ -187,11 +192,16 @@ ReactDOM.render(
   document.getElementById('root')
 );
 
+function gratePosition(x)
+{
+  return (x % 2 === 0 ? (x === 4 ? 4 : 3) : 2);
+}
+
 function gradeIndex(line, squares)
 {
   let index = line.map((x, i) => { return {
     index: x,
-    grade: (!(squares[x]?.value) ? (x % 2 === 0 ? (x === 4 ? 4 : 3) : 2) : -1),
+    grade: (!(squares[x]?.value) ? gratePosition(x) : -1),
   }}).sort((a,b) => {
     if (a.grade > b.grade) return -1;
     if (a.grade < b.grade) return 1;
@@ -202,6 +212,16 @@ function gradeIndex(line, squares)
 
 function gradeLine(squares, lines)
 {
+  let gameState = calculateStatePlayerS(squares);
+  console.log(gameState);
+
+  //f(gameState.x === 36 && gameState.o === 4)
+  let state = JSON.stringify(gameState);
+  if(state === JSON.stringify(LoseCase1) || state === JSON.stringify(LoseCase2))
+  {
+    return LoseCase12TargetLines[getRandomInt(0,LoseCase12TargetLines.length)];
+  }
+
   let linesValue = lines.map((x, i) => {
     const [a, b, c]  = lines[i];
     let aV = squares[a]?.value ?? 0;
@@ -212,6 +232,8 @@ function gradeLine(squares, lines)
       index: i
     };
   });
+
+
 
   // 0 0 []
   let priorityLine = linesValue.slice().filter((x) => x.value === 8).shift();
@@ -247,6 +269,32 @@ function gradeLine(squares, lines)
   }
 
   return  priorityLine?.index;
+}
+
+function calculateStatePlayerS(squares)
+{
+  let countX = 0;
+  let count0 = 0;
+  let valueX = 0;
+  let value0 = 0;
+  for (let i = 0; i < squares.length; i++) {
+    if(squares[i]?.value)
+    {
+      if(squares[i]?.value=== XValue)
+      {
+        countX++;
+        valueX += Math.pow(gratePosition(i), i + 1);
+      } else if(squares[i]?.value=== OValue)
+      {
+        count0++;
+        value0 += Math.pow(gratePosition(i), i + 1);
+      }
+    }
+  }
+  return {
+    x: Math.pow(valueX, countX),
+    o: Math.pow(value0, count0),
+  };
 }
 
 function calculateNextStep(squares) {
@@ -297,4 +345,14 @@ function getLastPosition(history, move)
     }
   }
   return '('+ (Math.floor(index / 3) + 1) +','+ (index % 3 + 1) +')';
+}
+
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
+function getRandomBool() {
+  return Math.random() > 0.5;
 }
