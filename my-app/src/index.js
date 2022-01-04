@@ -193,7 +193,8 @@ ReactDOM.render(
 
 function gratePosition(x)
 {
-  return (x % 2 === 0 ? (x === 4 ? 4 : 3) : 2);
+  let cleverStep = !debilFactor(0.618);
+  return ((x % 2 === 0) && cleverStep ? ((x === 4) && cleverStep ? 4 : 3) : 2);
 }
 
 function gradeIndex(line, squares)
@@ -206,6 +207,7 @@ function gradeIndex(line, squares)
     if (a.grade < b.grade) return 1;
     return 0;
   }).shift();
+
   return index?.index;
 }
 
@@ -214,7 +216,9 @@ function gradeLine(squares, lines)
   let gameState = calculateStatePlayerS(squares);
   console.log(gameState);
 
-  if(JSON.stringify(gameState) === JSON.stringify(LoseCase1))
+  let cleverStep = !debilFactor(0.618);
+
+  if(JSON.stringify(gameState) === JSON.stringify(LoseCase1) && cleverStep)
   {
     return LoseCase1TargetLines[getRandomInt(0,LoseCase1TargetLines.length)];
   }
@@ -230,8 +234,6 @@ function gradeLine(squares, lines)
     };
   });
 
-
-
   // 0 0 []
   let priorityLine = linesValue.slice().filter((x) => x.value === 8).shift();
 
@@ -239,6 +241,16 @@ function gradeLine(squares, lines)
   {
     // X X []
     priorityLine = linesValue.slice().filter((x) => x.value === 2).shift();
+  }
+
+  if(!priorityLine && !cleverStep)
+  {
+    priorityLine = linesValue.slice().filter((x) => x.value !== 3 && x.value !== 6 && x.value !== 9 && x.value !== 12).sort((a,b) => {
+      if (a.index > b.index && debilFactor(0.618)) return -1;
+      if (a.index < b.index && debilFactor(0.618)) return 1;
+      return 0;
+    }).shift();
+    console.log('DebilLine is ' + JSON.stringify(priorityLine))
   }
 
   if(!priorityLine)
@@ -352,4 +364,10 @@ function getRandomInt(min, max) {
 
 function getRandomBool() {
   return Math.random() > 0.5;
+}
+
+
+function debilFactor(factor)
+{
+  return Math.random() < factor ;
 }
