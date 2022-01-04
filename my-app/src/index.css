@@ -6,6 +6,10 @@ body {
   ol, ul {
     padding-left: 30px;
   }
+
+  .board {
+    width: 135px; 
+  }
   
   .btn-select {
     background-color: burlywood;

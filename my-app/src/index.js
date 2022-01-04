@@ -56,7 +56,7 @@ class Board extends React.Component {
       elements.push(this.renderLine(line));
     }
     return (
-      <div>
+      <div className='board'>
         {elements}
       </div>
     );
