@@ -254,6 +254,8 @@ function lineGrateValue(squareTargetIndex, lineIndex, squares)
     }
   }
 
+  const linesValues = checkNextStep(squares, squareTargetIndex);
+
   const grade = [1, 2, 4, 8, 18, 32];
   
   let value = grade[0];
@@ -267,24 +269,42 @@ function lineGrateValue(squareTargetIndex, lineIndex, squares)
       break;
     case 4: // 0 [] []
       value = grade[3];
-      if(emptyIndex !== -1) {
-        let linesValues = checkNext2Steps(squares, Lines[lineIndex][emptyIndex], squareTargetIndex)
-        if(1 < countInArray(linesValues, (x)=> x === 2)) // lose case on next 2 step
+      if(0 < countInArray(linesValues, (x)=> x === 2))
+      {
+        value = 0;
+      } else if(emptyIndex !== -1) {
+        let lines2Values = checkNext2Steps(squares, Lines[lineIndex][emptyIndex], squareTargetIndex)
+        if(1 < countInArray(lines2Values, (x)=> x === 2)) // lose case on next 2 step
         {
           value = 0;
         }
       }
+
       break;
     case 0: // [] [] []
       value = grade[1];
+      if(0 < countInArray(linesValues, (x)=> x === 2))
+      {
+        value = 0;
+      }
       break;
     case 1: // X [] []
-      value = grade[1];
+      if(0 < countInArray(linesValues, (x)=> x === 2))
+      {
+        value = 0;
+      }
+      else 
+      {
+        value = grade[1];
+      }
       break;
     default: 
       value = grade[0];
+      if(0 < countInArray(linesValues, (x)=> x === 2))
+      {
+        value = 0;
+      }
   }
-  const linesValues = checkNextStep(squares, squareTargetIndex);
   if(1 < countInArray(linesValues, (x)=> x === 8))
   {
     value++;
