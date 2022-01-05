@@ -223,8 +223,8 @@ function gratePosition(x, squares)
   {
     return -1;
   }
-  let lineGarateSumm = gratePositionByLines(x, squares).reduce((p,c) => p * c) / positionLines.length;
-  return (x % 2 === 0 ? (x === 4 ? 4 : 3) : 2) + lineGarateSumm;
+  let lineGarateSumm = gratePositionByLines(x, squares).reduce((p,c) => p * c);
+  return lineGarateSumm;
 }
 
 function gratePositionByLines(x, squares)
@@ -289,7 +289,7 @@ function lineGrateValue(squareTargetIndex, lineIndex, squares)
   const linesValues = checkNextStep(squares, squareTargetIndex);
   if(1 < countInArray(linesValues, (x)=> x === 8))
   {
-    value += grade[0];
+    value++;
   }
 
   return value;
