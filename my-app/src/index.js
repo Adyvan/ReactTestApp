@@ -14,8 +14,18 @@ const Lines = [
   [1, 4, 7], // 6
   [2, 5, 8], // 7
 ];
-const LoseCase1TargetLines = [3,6];
-const LoseCase1 = {x : 90000, o: 200};
+
+const positionLines = [
+  [0,2,5],  //0
+  [6,2],    //1
+  [1,2,7],  //2
+  [3,5],    //3
+  [0,1,3,6],//4
+  [3,7],    //5
+  [1,4,5],  //6
+  [4,6],    //7
+  [0,4,7],  //8   
+];
 
 function Square(props) {
   const className = ((props.value && props.value.isWin) ? "square-win" : "square");
@@ -69,7 +79,7 @@ class Game extends React.Component {
     const firstStep = getRandomBool();
     this.state = {
       history: [{
-        squares: Array(9).fill(null),
+        squares: Array(9).fill(null)
       }],
       stepNumber:0,
       xIsNext: firstStep,
@@ -86,7 +96,8 @@ class Game extends React.Component {
   }
 
   botStep(squares) {
-    let index = calculateNextStep(squares);
+    let gradeMask = Array(9).fill(null);
+    let index = calculateNextStep(squares, gradeMask);
     if(index !== null) {
       this.handleClick(index);
     }
@@ -97,7 +108,7 @@ class Game extends React.Component {
     const current = history[history.length - 1];
     const squares = current.squares.slice();
     
-    if (!calculateFinishGame(squares, history.length) && !squares[i]) {
+    if (!calculateFinishGame(squares, history.length) && ! squares[i]) {
       if(!squares[i]){
         squares[i] = {
            value: null,
@@ -105,6 +116,7 @@ class Game extends React.Component {
           };
        }
       squares[i].value = this.state.xIsNext ? XValue : OValue;
+
       this.setState({
         history: history.concat([{
           squares: squares,
@@ -191,9 +203,122 @@ ReactDOM.render(
   document.getElementById('root')
 );
 
-function gratePosition(x)
+function calculateNextStep(squares) {
+  var prioritySquares = squares.slice().map((x,i) => { return {
+    grade: gratePosition(i, squares),
+    index: i,
+  }}).sort((a,b) => {
+    if (a.grade > b.grade) return -1;
+    if (a.grade < b.grade) return 1;
+    return 0;
+  })
+
+  let prioritySquare = prioritySquares.slice().shift();
+  return prioritySquare.index === -1 ? null : prioritySquare.index;
+}
+
+function gratePosition(x, squares)
 {
-  return (x % 2 === 0 ? (x === 4 ? 4 : 3) : 2);
+  if(squares[x]?.value)
+  {
+    return -1;
+  }
+  let lineGarateSumm = gratePositionByLines(x, squares).reduce((p,c) => p * c) / positionLines.length;
+  return (x % 2 === 0 ? (x === 4 ? 4 : 3) : 2) + lineGarateSumm;
+}
+
+function gratePositionByLines(x, squares)
+{
+  let value = positionLines[x].map((line, i) => lineGrateValue(x, line, squares));
+  return value;
+}
+
+function allValueLines(squares)
+{
+  let lines = Array(Lines.length).fill(0);
+  for (let index = 0; index < Lines.length; index++) {
+    lines[index] = Lines[index].map((x)=> (squares[x]?.value ?? 0)).reduce((p,c) => p + c);
+  }
+  return lines;
+}
+
+function lineGrateValue(squareTargetIndex, lineIndex, squares)
+{
+  let summ = 0;
+  let emptyIndex = -1
+  for (let i = 0; i < Lines[lineIndex].length; i++) {
+    const squareIndex = Lines[lineIndex][i];
+    const value = squares[squareIndex];
+    if(value) {
+      summ += value.value;
+    } else if(squareIndex !== squareTargetIndex) {
+      emptyIndex = i;
+    }
+  }
+
+  const grade = [1, 2, 4, 8, 18, 32];
+  
+  let value = grade[0];
+
+  switch (summ) {
+    case 8: // 0 0 []
+    value = grade[5]
+      break;
+    case 2: // X X []
+      value = grade[4]
+      break;
+    case 4: // 0 [] []
+      value = grade[3];
+      if(emptyIndex !== -1) {
+        let linesValues = checkNext2Steps(squares, Lines[lineIndex][emptyIndex], squareTargetIndex)
+        if(1 < countInArray(linesValues, (x)=> x === 2)) // lose case on next 2 step
+        {
+          value = 0;
+        }
+      }
+      break;
+    case 0: // [] [] []
+      value = grade[2];
+      break;
+    case 1: // X [] []
+      value = grade[1];
+      break;
+    default: 
+      value = grade[0];
+  }
+  const linesValues = checkNextStep(squares, squareTargetIndex);
+  if(1 < countInArray(linesValues, (x)=> x === 8))
+  {
+    value += grade[0];
+  }
+
+  return value;
+}
+
+function checkNext2Steps(oldSquares, NewXpos, NewOpos)
+{
+  var sCopy = oldSquares.slice();
+  sCopy[NewXpos] = {
+    value: XValue,
+    isWin: false,
+  };
+  sCopy[NewOpos] = {
+    value: OValue,
+    isWin: false,
+  };
+  const linesValues = allValueLines(sCopy);
+  return linesValues;
+}
+
+function checkNextStep(oldSquares, NewOpos)
+{
+  var sCopy = oldSquares.slice();
+  sCopy[NewOpos] = {
+    value: OValue,
+    isWin: false,
+  };
+  const linesValues = allValueLines(sCopy);
+  return linesValues;
 }
 
 function gradeIndex(line, squares)
@@ -207,102 +332,6 @@ function gradeIndex(line, squares)
     return 0;
   }).shift();
   return index?.index;
-}
-
-function gradeLine(squares, lines)
-{
-  let gameState = calculateStatePlayerS(squares);
-  console.log(gameState);
-
-  if(JSON.stringify(gameState) === JSON.stringify(LoseCase1))
-  {
-    return LoseCase1TargetLines[getRandomInt(0,LoseCase1TargetLines.length)];
-  }
-
-  let linesValue = lines.map((x, i) => {
-    const [a, b, c]  = lines[i];
-    let aV = squares[a]?.value ?? 0;
-    let bV = squares[b]?.value ?? 0;
-    let cV = squares[c]?.value ?? 0;
-    return { 
-      value: aV + bV + cV,
-      index: i
-    };
-  });
-
-
-
-  // 0 0 []
-  let priorityLine = linesValue.slice().filter((x) => x.value === 8).shift();
-
-  if(!priorityLine)
-  {
-    // X X []
-    priorityLine = linesValue.slice().filter((x) => x.value === 2).shift();
-  }
-
-  if(!priorityLine)
-  {
-    // 0 [] []
-    priorityLine = linesValue.slice().filter((x) => x.value === 4).shift();
-  }
-
-  if(!priorityLine)
-  {
-    // [] [] []
-    priorityLine = linesValue.slice().filter((x) => x.value === 0).shift();
-  }
-
-  if(!priorityLine)
-  {
-    // X [] []
-    priorityLine = linesValue.slice().filter((x) => x.value === 1).shift();
-  }
-
-  if(!priorityLine)
-  {
-    // X 0 []
-    priorityLine = linesValue.slice().filter((x) => x.value === 5).shift();
-  }
-
-  return  priorityLine?.index;
-}
-
-function calculateStatePlayerS(squares)
-{
-  let countX = 0;
-  let count0 = 0;
-  let valueX = 0;
-  let value0 = 0;
-  for (let i = 0; i < squares.length; i++) {
-    if(squares[i]?.value)
-    {
-      if(squares[i]?.value=== XValue)
-      {
-        countX++;
-        valueX += gratePosition(i) * (i + 1) * 10;
-      } else if(squares[i]?.value=== OValue)
-      {
-        count0++;
-        value0 += gratePosition(i) * (i + 1) * 10;
-      }
-    }
-  }
-  return {
-    x: Math.pow(valueX, countX),
-    o: Math.pow(value0, count0),
-  };
-}
-
-function calculateNextStep(squares) {
-  let priorityLine = gradeLine(squares, Lines);
-
-  let line = Lines[priorityLine];
-  let index = null;
-  if(line) {
-    index =  gradeIndex(line, squares);
-  }
-  return index === -1 ? null : index;
 }
 
 function calculateFinishGame(squares) {
@@ -352,4 +381,16 @@ function getRandomInt(min, max) {
 
 function getRandomBool() {
   return Math.random() > 0.5;
+}
+
+
+function countInArray(array, func)
+{
+  let count = 0;
+  for (let index = 0; index < array.length; index++) {
+    if(func(array[index])){
+      count++
+    }
+  }
+  return count;
 }
