@@ -276,7 +276,7 @@ function lineGrateValue(squareTargetIndex, lineIndex, squares)
       }
       break;
     case 0: // [] [] []
-      value = grade[2];
+      value = grade[1];
       break;
     case 1: // X [] []
       value = grade[1];
