@@ -211,7 +211,7 @@ function calculateNextStep(squares) {
     return 0;
   })
 
-  let prioritySquare = prioritySquares.slice().shift();
+  let prioritySquare = maxInRandomInArray(prioritySquares.slice(), (x)=> x.grade);
   return prioritySquare.index === -1 ? null : prioritySquare.index;
 }
 
@@ -283,15 +283,15 @@ function lineGrateValue(squareTargetIndex, lineIndex, squares)
   {
     value++;
   }
-  if(summ !== 8 || summ !== 2)
+  if((summ !== 8 || summ !== 2) && !countInArray(linesValues, (x)=> x === 12))
   {
     if(0 < countInArray(linesValues, (x)=> x === 2))
     {
-      value = 0;
+      value = 1;
     } else if(countInArray(emptyIndex, (x)=> x !== null)) {
       for (let index = 0; index < emptyIndex.length; index++) {
         let lines2Values = checkNext2Steps(squares, Lines[lineIndex][emptyIndex[index]], squareTargetIndex)
-        if(1 < countInArray(lines2Values, (x)=> x === 2)) // lose case on next 2 step
+        if(1 < countInArray(lines2Values, (x)=> x === 2) && !countInArray(lines2Values, (x)=> x === 8)) // lose case on next 2 step
         {
           value = 0;
           break;
@@ -401,4 +401,33 @@ function countInArray(array, func)
     }
   }
   return count;
+}
+
+function maxInRandomInArray(array, funcGetValue)
+{
+  let max = getMax(array, funcGetValue);
+  let item = null;
+  if(max)
+  {
+    var items = array.filter(x => funcGetValue(x) === max.value);
+    item = items[getRandomInt(0, items.length)];
+  }
+  return item;
+}
+
+function getMax(array, funcGetValue)
+{
+  let max = { 
+    value:Number.MIN_VALUE,
+    index:-1
+  };
+  for (let index = 0; index < array.length; index++) {
+    const elementValue = funcGetValue(array[index]);
+    if(elementValue > max.value)
+    {
+      max.value = elementValue;
+      max.index = index;
+    }
+  }
+  return max;
 }
