@@ -243,14 +243,14 @@ function allValueLines(squares)
 function lineGrateValue(squareTargetIndex, lineIndex, squares)
 {
   let summ = 0;
-  let emptyIndex = -1
+  let emptyIndex = Array(2).fill(null)
   for (let i = 0; i < Lines[lineIndex].length; i++) {
     const squareIndex = Lines[lineIndex][i];
     const value = squares[squareIndex];
     if(value) {
       summ += value.value;
     } else if(squareIndex !== squareTargetIndex) {
-      emptyIndex = i;
+      emptyIndex.push(i);
     }
   }
 
@@ -269,45 +269,35 @@ function lineGrateValue(squareTargetIndex, lineIndex, squares)
       break;
     case 4: // 0 [] []
       value = grade[3];
-      if(0 < countInArray(linesValues, (x)=> x === 2))
-      {
-        value = 0;
-      } else if(emptyIndex !== -1) {
-        let lines2Values = checkNext2Steps(squares, Lines[lineIndex][emptyIndex], squareTargetIndex)
-        if(1 < countInArray(lines2Values, (x)=> x === 2)) // lose case on next 2 step
-        {
-          value = 0;
-        }
-      }
-
       break;
     case 0: // [] [] []
       value = grade[1];
-      if(0 < countInArray(linesValues, (x)=> x === 2))
-      {
-        value = 0;
-      }
       break;
     case 1: // X [] []
-      if(0 < countInArray(linesValues, (x)=> x === 2))
-      {
-        value = 0;
-      }
-      else 
-      {
         value = grade[1];
-      }
       break;
     default: 
       value = grade[0];
-      if(0 < countInArray(linesValues, (x)=> x === 2))
-      {
-        value = 0;
-      }
   }
   if(1 < countInArray(linesValues, (x)=> x === 8))
   {
     value++;
+  }
+  if(summ !== 8 || summ !== 2)
+  {
+    if(0 < countInArray(linesValues, (x)=> x === 2))
+    {
+      value = 0;
+    } else if(countInArray(emptyIndex, (x)=> x !== null)) {
+      for (let index = 0; index < emptyIndex.length; index++) {
+        let lines2Values = checkNext2Steps(squares, Lines[lineIndex][emptyIndex[index]], squareTargetIndex)
+        if(1 < countInArray(lines2Values, (x)=> x === 2)) // lose case on next 2 step
+        {
+          value = 0;
+          break;
+        }
+      }
+    }
   }
 
   return value;
